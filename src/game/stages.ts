@@ -1,6 +1,8 @@
 import type { StageData, EnemySpawn, CollectibleSpawn, Platform, Hazard } from './types';
 
-function makePlatforms(stageId: number): Platform[] {
+export const STAGE_COUNT = 20;
+
+function makePlatforms(stageId: number, stageWidth: number): Platform[] {
   const platforms: Platform[] = [];
 
   switch (stageId) {
@@ -82,6 +84,94 @@ function makePlatforms(stageId: number): Platform[] {
       platforms.push({ x: 1300, y: 500, w: 200, h: 40, type: 'moving', moveAxis: 'y', moveSpeed: 50, moveRange: 100, moveOrigin: 500 });
       platforms.push({ x: 1600, y: 600, w: 500, h: 80, type: 'stone' });
       break;
+    case 11: // Crystal Mine
+      platforms.push({ x: 0, y: 620, w: 2800, h: 80, type: 'stone' });
+      platforms.push({ x: 400, y: 520, w: 220, h: 40, type: 'stone' });
+      platforms.push({ x: 800, y: 460, w: 200, h: 40, type: 'stone' });
+      platforms.push({ x: 1200, y: 520, w: 220, h: 40, type: 'stone' });
+      platforms.push({ x: 1700, y: 460, w: 240, h: 40, type: 'stone' });
+      platforms.push({ x: 2150, y: 520, w: 180, h: 40, type: 'stone' });
+      break;
+    case 12: // Frost Spire
+      platforms.push({ x: 0, y: 620, w: 2400, h: 80, type: 'stone' });
+      platforms.push({ x: 450, y: 520, w: 180, h: 40, type: 'stone' });
+      platforms.push({ x: 800, y: 430, w: 160, h: 40, type: 'stone' });
+      platforms.push({ x: 1050, y: 350, w: 160, h: 40, type: 'stone' });
+      platforms.push({ x: 1350, y: 280, w: 160, h: 40, type: 'stone' });
+      platforms.push({ x: 1700, y: 430, w: 220, h: 40, type: 'stone' });
+      platforms.push({ x: 2050, y: 520, w: 200, h: 40, type: 'stone' });
+      break;
+    case 13: // Thunder Fields
+      platforms.push({ x: 0, y: 600, w: 1400, h: 80, type: 'grass' });
+      platforms.push({ x: 1500, y: 560, w: 300, h: 60, type: 'grass' });
+      platforms.push({ x: 1900, y: 520, w: 250, h: 50, type: 'grass' });
+      platforms.push({ x: 2300, y: 580, w: 300, h: 60, type: 'grass' });
+      platforms.push({ x: 2700, y: 520, w: 220, h: 50, type: 'grass' });
+      break;
+    case 14: // Iron Keep
+      platforms.push({ x: 0, y: 600, w: 900, h: 100, type: 'stone' });
+      platforms.push({ x: 1100, y: 520, w: 220, h: 40, type: 'stone' });
+      platforms.push({ x: 1500, y: 520, w: 220, h: 40, type: 'stone' });
+      platforms.push({ x: 1900, y: 450, w: 180, h: 40, type: 'stone' });
+      platforms.push({ x: 2200, y: 600, w: 800, h: 100, type: 'stone' });
+      break;
+    case 15: // Shadow Labyrinth
+      platforms.push({ x: 0, y: 600, w: 1000, h: 80, type: 'stone' });
+      platforms.push({ x: 1100, y: 520, w: 200, h: 40, type: 'stone' });
+      platforms.push({ x: 1350, y: 450, w: 180, h: 40, type: 'stone' });
+      platforms.push({ x: 1600, y: 520, w: 200, h: 40, type: 'stone' });
+      platforms.push({ x: 1850, y: 450, w: 180, h: 40, type: 'stone' });
+      platforms.push({ x: 2100, y: 520, w: 250, h: 40, type: 'stone' });
+      platforms.push({ x: 2400, y: 600, w: 600, h: 80, type: 'stone' });
+      break;
+    case 16: // Sky Fortress
+      platforms.push({ x: 0, y: 560, w: 300, h: 60, type: 'stone' });
+      platforms.push({ x: 420, y: 480, w: 220, h: 40, type: 'moving', moveAxis: 'x', moveSpeed: 70, moveRange: 140, moveOrigin: 420 });
+      platforms.push({ x: 900, y: 420, w: 220, h: 40, type: 'stone' });
+      platforms.push({ x: 1250, y: 350, w: 180, h: 40, type: 'moving', moveAxis: 'y', moveSpeed: 60, moveRange: 120, moveOrigin: 350 });
+      platforms.push({ x: 1600, y: 460, w: 260, h: 50, type: 'stone' });
+      platforms.push({ x: 2050, y: 520, w: 180, h: 40, type: 'stone' });
+      platforms.push({ x: 2300, y: 560, w: 500, h: 80, type: 'stone' });
+      break;
+    case 17: // Infernal Depths
+      platforms.push({ x: 0, y: 580, w: 220, h: 40, type: 'stone' });
+      platforms.push({ x: 320, y: 520, w: 180, h: 40, type: 'stone' });
+      platforms.push({ x: 580, y: 460, w: 220, h: 40, type: 'stone' });
+      platforms.push({ x: 900, y: 520, w: 200, h: 40, type: 'stone' });
+      platforms.push({ x: 1220, y: 460, w: 220, h: 40, type: 'stone' });
+      platforms.push({ x: 1550, y: 520, w: 260, h: 40, type: 'stone' });
+      platforms.push({ x: 1900, y: 580, w: 900, h: 80, type: 'stone' });
+      break;
+    case 18: // Storm Citadel
+      platforms.push({ x: 0, y: 620, w: 2600, h: 80, type: 'stone' });
+      platforms.push({ x: 500, y: 520, w: 180, h: 40, type: 'stone' });
+      platforms.push({ x: 900, y: 460, w: 180, h: 40, type: 'moving', moveAxis: 'x', moveSpeed: 80, moveRange: 120, moveOrigin: 900 });
+      platforms.push({ x: 1350, y: 400, w: 160, h: 40, type: 'stone' });
+      platforms.push({ x: 1700, y: 520, w: 200, h: 40, type: 'stone' });
+      platforms.push({ x: 2050, y: 440, w: 220, h: 40, type: 'stone' });
+      platforms.push({ x: 2400, y: 600, w: 400, h: 80, type: 'stone' });
+      break;
+    case 19: // Arcane Cathedral
+      platforms.push({ x: 0, y: 600, w: 1000, h: 80, type: 'stone' });
+      platforms.push({ x: 1050, y: 500, w: 260, h: 40, type: 'stone' });
+      platforms.push({ x: 1350, y: 420, w: 220, h: 40, type: 'stone' });
+      platforms.push({ x: 1650, y: 340, w: 180, h: 40, type: 'stone' });
+      platforms.push({ x: 1950, y: 460, w: 240, h: 40, type: 'stone' });
+      platforms.push({ x: 2250, y: 580, w: 520, h: 80, type: 'stone' });
+      break;
+    case 20: // Dragon's Lair
+      platforms.push({ x: 0, y: 600, w: 1200, h: 100, type: 'stone' });
+      platforms.push({ x: 1350, y: 520, w: 220, h: 40, type: 'stone' });
+      platforms.push({ x: 1650, y: 470, w: 220, h: 40, type: 'stone' });
+      platforms.push({ x: 1950, y: 520, w: 220, h: 40, type: 'stone' });
+      platforms.push({ x: 2200, y: 600, w: 800, h: 100, type: 'stone' });
+      break;
+  }
+
+  const hasBottomFloor = platforms.some(p => p.y >= 650 && p.w >= stageWidth * 0.9);
+  if (!hasBottomFloor) {
+    const floorType = stageId === 2 ? 'wood' : stageId === 1 || stageId === 8 ? 'grass' : 'stone';
+    platforms.push({ x: 0, y: 700, w: stageWidth, h: 100, type: floorType });
   }
 
   return platforms;
@@ -103,6 +193,24 @@ function makeHazards(stageId: number): Hazard[] {
       hazards.push({ x: 880, y: 650, w: 100, h: 30, type: 'lava', damage: 30 });
       hazards.push({ x: 1380, y: 650, w: 100, h: 30, type: 'lava', damage: 30 });
       hazards.push({ x: 1700, y: 650, w: 100, h: 30, type: 'lava', damage: 30 });
+      break;
+    case 12: // Frost spikes
+      hazards.push({ x: 500, y: 500, w: 40, h: 20, type: 'spike', damage: 20 });
+      hazards.push({ x: 950, y: 410, w: 40, h: 20, type: 'spike', damage: 20 });
+      hazards.push({ x: 1350, y: 330, w: 40, h: 20, type: 'spike', damage: 20 });
+      break;
+    case 17: // Infernal lava floor
+      hazards.push({ x: 0, y: 640, w: 220, h: 30, type: 'lava', damage: 30 });
+      hazards.push({ x: 320, y: 640, w: 180, h: 30, type: 'lava', damage: 30 });
+      hazards.push({ x: 580, y: 640, w: 220, h: 30, type: 'lava', damage: 30 });
+      hazards.push({ x: 900, y: 640, w: 200, h: 30, type: 'lava', damage: 30 });
+      hazards.push({ x: 1220, y: 640, w: 220, h: 30, type: 'lava', damage: 30 });
+      hazards.push({ x: 1550, y: 640, w: 260, h: 30, type: 'lava', damage: 30 });
+      hazards.push({ x: 1900, y: 640, w: 900, h: 30, type: 'lava', damage: 30 });
+      break;
+    case 20: // Dragon's arena
+      hazards.push({ x: 600, y: 560, w: 50, h: 50, type: 'saw', damage: 25, moveAxis: 'y', moveSpeed: 80, moveRange: 150 });
+      hazards.push({ x: 1500, y: 520, w: 50, h: 50, type: 'saw', damage: 25, moveAxis: 'x', moveSpeed: 70, moveRange: 120 });
       break;
     case 10: // Castle hazards - saw blades
       hazards.push({ x: 550, y: 400, w: 50, h: 50, type: 'saw', damage: 25, moveAxis: 'y', moveSpeed: 80, moveRange: 150 });
@@ -165,6 +273,70 @@ function makeEnemies(stageId: number): EnemySpawn[] {
       enemies.push({ type: 'assassin', x: 800, y: 400, level: 9 });
       enemies.push({ type: 'boss', x: 1800, y: 500, level: 10, isBoss: true });
       break;
+    case 11:
+      enemies.push({ type: 'rogue', x: 600, y: 520, level: 9 });
+      enemies.push({ type: 'archer', x: 1100, y: 420, level: 10 });
+      enemies.push({ type: 'spearman', x: 1500, y: 520, level: 10 });
+      enemies.push({ type: 'paladin', x: 2150, y: 520, level: 12, isBoss: true });
+      break;
+    case 12:
+      enemies.push({ type: 'mage', x: 700, y: 430, level: 12 });
+      enemies.push({ type: 'rogue', x: 1000, y: 430, level: 11 });
+      enemies.push({ type: 'assassin', x: 1450, y: 350, level: 12 });
+      enemies.push({ type: 'mage', x: 1800, y: 430, level: 13, isBoss: true });
+      break;
+    case 13:
+      enemies.push({ type: 'rogue', x: 400, y: 550, level: 12 });
+      enemies.push({ type: 'rogue', x: 900, y: 520, level: 13 });
+      enemies.push({ type: 'archer', x: 1600, y: 520, level: 13 });
+      enemies.push({ type: 'berserker', x: 2350, y: 520, level: 14, isBoss: true });
+      break;
+    case 14:
+      enemies.push({ type: 'captain', x: 700, y: 520, level: 14 });
+      enemies.push({ type: 'paladin', x: 1200, y: 520, level: 15 });
+      enemies.push({ type: 'mage', x: 1750, y: 450, level: 14 });
+      enemies.push({ type: 'paladin', x: 2150, y: 520, level: 16, isBoss: true });
+      break;
+    case 15:
+      enemies.push({ type: 'assassin', x: 500, y: 520, level: 14 });
+      enemies.push({ type: 'rogue', x: 950, y: 520, level: 15 });
+      enemies.push({ type: 'mage', x: 1300, y: 450, level: 15 });
+      enemies.push({ type: 'boss', x: 2100, y: 520, level: 17, isBoss: true });
+      break;
+    case 16:
+      enemies.push({ type: 'rogue', x: 350, y: 520, level: 15 });
+      enemies.push({ type: 'archer', x: 850, y: 450, level: 15 });
+      enemies.push({ type: 'mage', x: 1300, y: 350, level: 16 });
+      enemies.push({ type: 'assassin', x: 1750, y: 520, level: 16 });
+      enemies.push({ type: 'paladin', x: 2150, y: 520, level: 17, isBoss: true });
+      break;
+    case 17:
+      enemies.push({ type: 'berserker', x: 250, y: 540, level: 16 });
+      enemies.push({ type: 'assassin', x: 700, y: 480, level: 16 });
+      enemies.push({ type: 'mage', x: 1150, y: 420, level: 17 });
+      enemies.push({ type: 'paladin', x: 1600, y: 520, level: 18 });
+      enemies.push({ type: 'boss', x: 2000, y: 560, level: 18, isBoss: true });
+      break;
+    case 18:
+      enemies.push({ type: 'rogue', x: 500, y: 520, level: 17 });
+      enemies.push({ type: 'mage', x: 950, y: 460, level: 17 });
+      enemies.push({ type: 'assassin', x: 1350, y: 400, level: 17 });
+      enemies.push({ type: 'paladin', x: 1850, y: 520, level: 18 });
+      enemies.push({ type: 'boss', x: 2350, y: 520, level: 19, isBoss: true });
+      break;
+    case 19:
+      enemies.push({ type: 'mage', x: 800, y: 520, level: 18 });
+      enemies.push({ type: 'archer', x: 1200, y: 460, level: 18 });
+      enemies.push({ type: 'rogue', x: 1600, y: 420, level: 18 });
+      enemies.push({ type: 'paladin', x: 2000, y: 520, level: 19 });
+      enemies.push({ type: 'boss', x: 2350, y: 520, level: 20, isBoss: true });
+      break;
+    case 20:
+      enemies.push({ type: 'paladin', x: 700, y: 520, level: 19 });
+      enemies.push({ type: 'mage', x: 1100, y: 450, level: 19 });
+      enemies.push({ type: 'assassin', x: 1500, y: 520, level: 19 });
+      enemies.push({ type: 'boss', x: 2050, y: 520, level: 22, isBoss: true });
+      break;
   }
 
   return enemies;
@@ -193,7 +365,8 @@ function makeCollectibles(stageId: number): CollectibleSpawn[] {
 }
 
 function getStageWidth(stageId: number): number {
-  const widths = [2500, 2000, 2500, 2300, 1500, 2800, 1800, 2600, 3300, 2200];
+  const widths = [2500, 2000, 2500, 2300, 1500, 2800, 1800, 2600, 3300, 2200,
+    2800, 2400, 3000, 2500, 2600, 2600, 2800, 2700, 2600, 3000];
   return widths[stageId - 1] || 2000;
 }
 
@@ -209,6 +382,16 @@ export function createStageData(stageId: number): StageData {
     8: '/assets/bg_title.jpg',
     9: '/assets/bg_cave.jpg',
     10: '/assets/bg_castle.jpg',
+    11: '/assets/bg_crystal.jpg',
+    12: '/assets/bg_snow.jpg',
+    13: '/assets/bg_thunder.jpg',
+    14: '/assets/bg_keep.jpg',
+    15: '/assets/bg_shadow.jpg',
+    16: '/assets/bg_sky.jpg',
+    17: '/assets/bg_infernal.jpg',
+    18: '/assets/bg_storm.jpg',
+    19: '/assets/bg_arcane.jpg',
+    20: '/assets/bg_dragon.jpg',
   };
 
   const bgColors: Record<number, string> = {
@@ -222,6 +405,16 @@ export function createStageData(stageId: number): StageData {
     8: '#4682B4',
     9: '#2F4F4F',
     10: '#4B0082',
+    11: '#6CC7D1',
+    12: '#E0F2FF',
+    13: '#1F3A93',
+    14: '#5B5B5B',
+    15: '#1F1F2B',
+    16: '#7C9ED4',
+    17: '#9B2C00',
+    18: '#2A3D66',
+    19: '#641E8A',
+    20: '#3A1206',
   };
 
   const stageNames: Record<number, string> = {
@@ -235,6 +428,16 @@ export function createStageData(stageId: number): StageData {
     8: 'Windy Cliffs',
     9: 'The Gauntlet',
     10: 'Sword King Throne',
+    11: 'Crystal Mine',
+    12: 'Frost Spire',
+    13: 'Thunder Fields',
+    14: 'Iron Keep',
+    15: 'Shadow Labyrinth',
+    16: 'Sky Fortress',
+    17: 'Infernal Depths',
+    18: 'Storm Citadel',
+    19: 'Arcane Cathedral',
+    20: 'Dragon\'s Lair',
   };
 
   const themes: Record<number, string> = {
@@ -248,10 +451,20 @@ export function createStageData(stageId: number): StageData {
     8: 'storm',
     9: 'dungeon',
     10: 'castle',
+    11: 'crystal',
+    12: 'ice',
+    13: 'storm',
+    14: 'fort',
+    15: 'shadow',
+    16: 'sky',
+    17: 'inferno',
+    18: 'storm',
+    19: 'arcane',
+    20: 'dragon',
   };
 
   const width = getStageWidth(stageId);
-  const platforms = makePlatforms(stageId);
+  const platforms = makePlatforms(stageId, width);
   const exitX = getStageExitX(platforms, width);
 
   return {

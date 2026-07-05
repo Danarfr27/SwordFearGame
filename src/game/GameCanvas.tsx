@@ -2,6 +2,7 @@ import { useRef, useEffect, useCallback } from 'react';
 import type { GameState, SaveData } from './types';
 import { updateGame, renderGame, createInputState } from './engine';
 import type { InputState } from './engine';
+import { startFightTheme, stopFightTheme } from './audio';
 
 interface GameCanvasProps {
   gameState: GameState;
@@ -28,6 +29,7 @@ export default function GameCanvas({ gameState, onStateChange, save }: GameCanva
   useEffect(() => {
     const imageSources: Record<string, string> = {
       '/assets/hero_player.png': '/assets/hero_player.png',
+      '/assets/ryu.png': '/assets/ryu.png',
       '/assets/enemy_rookie.png': '/assets/enemy_rookie.png',
       '/assets/enemy_rogue.png': '/assets/enemy_rogue.png',
       '/assets/enemy_mage.png': '/assets/enemy_mage.png',
@@ -53,6 +55,21 @@ export default function GameCanvas({ gameState, onStateChange, save }: GameCanva
 
     Promise.all(loadPromises);
   }, []);
+
+  // Manage fight theme music
+  useEffect(() => {
+    if (gameState.screen === 'playing' && gameState.currentStage > 0) {
+      startFightTheme();
+    } else {
+      stopFightTheme();
+    }
+
+    return () => {
+      if (gameState.screen !== 'playing' || gameState.currentStage === 0) {
+        stopFightTheme();
+      }
+    };
+  }, [gameState.screen, gameState.currentStage]);
 
   // Keyboard input
   useEffect(() => {
@@ -203,12 +220,14 @@ export default function GameCanvas({ gameState, onStateChange, save }: GameCanva
   }, [gameLoop]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={800}
-      height={600}
-      className="border-2 border-gray-600 rounded-lg shadow-2xl"
-      style={{ imageRendering: 'auto' }}
-    />
+    <div className="relative inline-block w-full max-w-[800px] touch-none">
+      <canvas
+        ref={canvasRef}
+        width={800}
+        height={600}
+        className="block w-full max-w-[800px] h-auto border-2 border-gray-600 rounded-lg shadow-2xl"
+        style={{ imageRendering: 'auto', touchAction: 'none' }}
+      />
+    </div>
   );
 }

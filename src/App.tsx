@@ -3,7 +3,8 @@ import { Swords, Shield, Star, Lock, Play, HelpCircle, ChevronLeft, RotateCcw, H
 import type { GameScreen, GameState, SaveData } from './game/types';
 import { initGameState, loadSave, saveSave, calculateStageScore } from './game/engine';
 import GameCanvas from './game/GameCanvas';
-import { WEAPON_UPGRADES, HP_UPGRADES, SPECIAL_UPGRADES } from './game/stages';
+import { STAGE_COUNT, WEAPON_UPGRADES, HP_UPGRADES, SPECIAL_UPGRADES } from './game/stages';
+import TouchControls from './components/TouchControls';
 import './App.css';
 
 function App() {
@@ -32,12 +33,12 @@ function App() {
     } else if (state.screen === 'victory') {
       const result = calculateStageScore(state);
       const completedStage = selectedStage;
-      const nextStage = completedStage < 10 ? completedStage + 1 : completedStage;
+      const nextStage = completedStage < STAGE_COUNT ? completedStage + 1 : completedStage;
 
       setSave(prev => {
         const newSave = { ...prev };
         newSave.gold += state.gold;
-        if (completedStage < 10) {
+        if (completedStage < STAGE_COUNT) {
           newSave.stagesUnlocked[completedStage] = true;
         }
         if (result.stars > newSave.stageStars[completedStage - 1]) {
@@ -115,9 +116,9 @@ function App() {
       weaponLevel: 1,
       hpLevel: 1,
       specialLevel: 1,
-      stagesUnlocked: [true, false, false, false, false, false, false, false, false, false],
-      stageStars: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      stageBestScores: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      stagesUnlocked: Array.from({ length: STAGE_COUNT }, (_, i) => i === 0),
+      stageStars: Array.from({ length: STAGE_COUNT }, () => 0),
+      stageBestScores: Array.from({ length: STAGE_COUNT }, () => 0),
     };
     setSave(newSave);
     saveSave(newSave);
@@ -152,11 +153,11 @@ function App() {
           <div className="flex items-center justify-center gap-4 mb-4">
             <Swords className="w-12 h-12 text-yellow-400" />
             <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-500 to-orange-500 drop-shadow-lg tracking-wider">
-              SWORD HERO
+              BACOKMEMBACOK
             </h1>
             <Swords className="w-12 h-12 text-yellow-400" />
           </div>
-          <p className="text-2xl text-blue-300 font-bold tracking-widest">BLADE QUEST</p>
+          <p className="text-2xl text-blue-300 font-bold tracking-widest">FIRDHAN SWORD GAME</p>
           <div className="mt-4 w-64 h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent mx-auto" />
         </div>
 
@@ -218,12 +219,18 @@ function App() {
     const stageNames = [
       'Green Plains', 'Wooden Forts', 'Spiked Path', 'Moving Towers',
       'Guard Captain', 'Lava Caverns', 'Dual Blades', 'Windy Cliffs',
-      'The Gauntlet', 'Sword King Throne'
+      'The Gauntlet', 'Sword King Throne',
+      'Crystal Mine', 'Frost Spire', 'Thunder Fields', 'Iron Keep',
+      'Shadow Labyrinth', 'Sky Fortress', 'Infernal Depths', 'Storm Citadel',
+      'Arcane Cathedral', 'Dragon\'s Lair'
     ];
     const stageThemes = [
       'bg-green-600', 'bg-yellow-700', 'bg-gray-600', 'bg-blue-500',
       'bg-gray-500', 'bg-red-700', 'bg-purple-700', 'bg-cyan-600',
-      'bg-slate-700', 'bg-red-900'
+      'bg-slate-700', 'bg-red-900',
+      'bg-indigo-700', 'bg-sky-700', 'bg-emerald-700', 'bg-orange-700',
+      'bg-violet-700', 'bg-blue-800', 'bg-rose-700', 'bg-fuchsia-700',
+      'bg-amber-700', 'bg-slate-900'
     ];
 
     return (
@@ -249,7 +256,7 @@ function App() {
 
         {/* Stage Grid */}
         <div className="grid grid-cols-5 gap-4 max-w-4xl w-full mb-8">
-          {Array.from({ length: 10 }).map((_, i) => {
+          {Array.from({ length: STAGE_COUNT }).map((_, i) => {
             const stageNum = i + 1;
             const isUnlocked = save.stagesUnlocked[i];
             const stars = save.stageStars[i];
@@ -320,12 +327,13 @@ function App() {
     if (!gameState) return null;
 
     return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center relative">
         <GameCanvas
           gameState={gameState}
           onStateChange={handleGameStateChange}
           save={save}
         />
+        <TouchControls />
 
         {/* PAUSE OVERLAY */}
         {screen === 'paused' && (
@@ -433,7 +441,7 @@ function App() {
                 </div>
               </div>
 
-              {selectedStage < 10 && (
+              {selectedStage < STAGE_COUNT && (
                 <button
                   onClick={() => startStage(selectedStage + 1)}
                   className="flex items-center justify-center gap-2 w-56 py-3 bg-green-600 hover:bg-green-500 text-white font-bold text-lg rounded-xl transition-all hover:scale-105"
@@ -560,7 +568,7 @@ function App() {
             <Zap className="w-12 h-12 text-blue-400 mb-4" />
             <h3 className="text-xl font-bold text-white mb-2">Special Skill</h3>
             <p className="text-blue-400 font-bold mb-1">Level {save.specialLevel}</p>
-            <p className="text-gray-400 text-sm mb-4">Bonus: +{currentSpecial.specialBonus} DMG</p>
+            <p className="text-gray-400 text-sm mb-4">Skill: Suiton Soryudan no Jutsu — range jauh +{currentSpecial.specialBonus} DMG</p>
 
             {nextSpecial ? (
               <>

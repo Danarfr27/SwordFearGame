@@ -1,0 +1,165 @@
+.touch-controls-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 99999;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  touch-action: none;
+}
+
+.tc-btn {
+  position: absolute;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    transform 0.08s ease,
+    background 0.08s ease,
+    box-shadow 0.08s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+
+.tc-btn:active,
+.tc-btn.pressed {
+  transform: scale(0.88);
+}
+
+/* ---- Action Buttons (Kiri) ---- */
+.tc-action {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.45);
+  background: rgba(10, 10, 20, 0.55);
+  color: #fff;
+  font-size: 26px;
+  font-weight: 900;
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  text-shadow: 0 0 12px currentColor;
+}
+
+.tc-action .tc-label {
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+  letter-spacing: 0.5px;
+  pointer-events: none;
+}
+
+/* Warna tombol action */
+.tc-btn-d {
+  border-color: rgba(255, 200, 50, 0.7);
+  color: #ffd232;
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.5),
+    0 0 15px rgba(255, 200, 50, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+.tc-btn-d:active,
+.tc-btn-d.pressed {
+  background: rgba(255, 200, 50, 0.25);
+  box-shadow:
+    0 0 30px rgba(255, 200, 50, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.tc-btn-a {
+  border-color: rgba(255, 80, 80, 0.7);
+  color: #ff5050;
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.5),
+    0 0 15px rgba(255, 80, 80, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+.tc-btn-a:active,
+.tc-btn-a.pressed {
+  background: rgba(255, 80, 80, 0.25);
+  box-shadow:
+    0 0 30px rgba(255, 80, 80, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.tc-btn-s {
+  border-color: rgba(80, 150, 255, 0.7);
+  color: #5096ff;
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.5),
+    0 0 15px rgba(80, 150, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+.tc-btn-s:active,
+.tc-btn-s.pressed {
+  background: rgba(80, 150, 255, 0.25);
+  box-shadow:
+    0 0 30px rgba(80, 150, 255, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* ---- D-Pad (Kanan) ---- */
+.tc-dpad {
+  width: 68px;
+  height: 68px;
+  border-radius: 18px;
+  border: 3px solid rgba(255, 255, 255, 0.45);
+  background: rgba(10, 10, 20, 0.55);
+  color: #fff;
+  font-size: 28px;
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  text-shadow: 0 0 12px rgba(100, 255, 150, 0.5);
+}
+
+.tc-dpad:active,
+.tc-dpad.pressed {
+  background: rgba(100, 255, 150, 0.2);
+  border-color: rgba(100, 255, 150, 0.8);
+  box-shadow:
+    0 0 25px rgba(100, 255, 150, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  color: #64ff96;
+}
+
+/* ---- Responsive ---- */
+@media (max-height: 500px) {
+  .tc-action,
+  .tc-dpad {
+    width: 58px;
+    height: 58px;
+    font-size: 22px;
+  }
+  .tc-action .tc-label {
+    font-size: 9px;
+    bottom: -18px;
+  }
+}
+
+@media (min-width: 768px) {
+  .tc-action,
+  .tc-dpad {
+    width: 80px;
+    height: 80px;
+    font-size: 28px;
+  }
+}

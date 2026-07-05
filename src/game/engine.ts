@@ -1,7 +1,8 @@
 import type {
   GameState, Player, Enemy, SaveData
 } from './types';
-import { createStageData, getEnemyStats, WEAPON_UPGRADES, HP_UPGRADES, SPECIAL_UPGRADES } from './stages';
+import { STAGE_COUNT, createStageData, getEnemyStats, WEAPON_UPGRADES, HP_UPGRADES, SPECIAL_UPGRADES } from './stages';
+import { playAttackSound, playBlockSound, playSpecialSound, playHitSound, playDamageSound, playCollectSound } from './audio';
 
 // ========== CONSTANTS ==========
 const GRAVITY = 900;
@@ -16,6 +17,7 @@ const COMBO_WINDOW = 0.8;
 const INVINCIBLE_DURATION = 0.6;
 const BLOCK_STAMINA_DRAIN = 20;
 const BLOCK_STAMINA_REGEN = 15;
+const PLAYER_HP_REGEN_RATE = 8;
 const SPECIAL_METER_REGEN_RATE = 18;
 const SPECIAL_METER_USE_THRESHOLD = 20;
 const SPECIAL_METER_PER_HIT = 8;
@@ -28,16 +30,28 @@ const SAVE_KEY = 'sword_hero_save';
 export function loadSave(): SaveData {
   try {
     const data = localStorage.getItem(SAVE_KEY);
-    if (data) return JSON.parse(data);
+    if (data) {
+      const saved: Partial<SaveData> = JSON.parse(data);
+      const normalized: SaveData = {
+        gold: typeof saved.gold === 'number' ? saved.gold : 500,
+        weaponLevel: typeof saved.weaponLevel === 'number' ? saved.weaponLevel : 1,
+        hpLevel: typeof saved.hpLevel === 'number' ? saved.hpLevel : 1,
+        specialLevel: typeof saved.specialLevel === 'number' ? saved.specialLevel : 1,
+        stagesUnlocked: Array.from({ length: STAGE_COUNT }, (_, i) => Boolean(saved.stagesUnlocked?.[i]) || i === 0),
+        stageStars: Array.from({ length: STAGE_COUNT }, (_, i) => Number(saved.stageStars?.[i] ?? 0)),
+        stageBestScores: Array.from({ length: STAGE_COUNT }, (_, i) => Number(saved.stageBestScores?.[i] ?? 0)),
+      };
+      return normalized;
+    }
   } catch { /* ignore */ }
   return {
     gold: 500,
     weaponLevel: 1,
     hpLevel: 1,
     specialLevel: 1,
-    stagesUnlocked: [true, false, false, false, false, false, false, false, false, false],
-    stageStars: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    stageBestScores: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    stagesUnlocked: Array.from({ length: STAGE_COUNT }, (_, i) => i === 0),
+    stageStars: Array.from({ length: STAGE_COUNT }, () => 0),
+    stageBestScores: Array.from({ length: STAGE_COUNT }, () => 0),
   };
 }
 
@@ -276,6 +290,9 @@ function updatePlayer(state: GameState, input: InputState, dt: number, save: Sav
   }
   if (p.attackCooldown > 0) p.attackCooldown -= dt;
   if (p.specialCooldown > 0) p.specialCooldown -= dt;
+  if (!p.invincible && p.state !== 'hurt' && p.hp < p.maxHp) {
+    p.hp = Math.min(p.maxHp, p.hp + PLAYER_HP_REGEN_RATE * dt);
+  }
   p.specialMeter = Math.min(p.maxSpecialMeter, p.specialMeter + SPECIAL_METER_REGEN_RATE * dt);
   if (p.comboTimer > 0) {
     p.comboTimer -= dt;
@@ -371,6 +388,7 @@ function updatePlayer(state: GameState, input: InputState, dt: number, save: Sav
     p.comboCount++;
     if (p.comboCount > 3) p.comboCount = 1;
     p.comboTimer = COMBO_WINDOW;
+    playAttackSound();
 
     if (p.comboCount === 1) p.state = 'attack';
     else if (p.comboCount === 2) p.state = 'attack2';
@@ -388,6 +406,7 @@ function updatePlayer(state: GameState, input: InputState, dt: number, save: Sav
     p.specialCooldown = 1;
     p.specialMeter = 0;
     performSpecialAttack(state, save);
+    playSpecialSound();
   }
 
   if (!p.onGround && p.state !== 'hurt' && p.state !== 'special' && p.state !== 'attack' && p.state !== 'attack2' && p.state !== 'attack3') {
@@ -423,6 +442,7 @@ function performPlayerAttack(state: GameState, save: SaveData) {
       enemy.invincibleTimer = 0.3;
       enemy.vx = p.facing * KNOCKBACK_FORCE;
       enemy.vy = -100;
+      playHitSound();
 
       hitSomething = true;
 
@@ -482,34 +502,37 @@ function healPlayerToFull(player: Player, maxHp: number) {
 function performSpecialAttack(state: GameState, save: SaveData) {
   const p = state.player;
   const specialBonus = SPECIAL_UPGRADES[save.specialLevel - 1]?.specialBonus || 0;
-  const fireRange = 140 + specialBonus * 10;
+  const waterRange = 260 + specialBonus * 15;
 
-  const aoeX = p.x - 70;
-  const aoeY = p.y - 50;
-  const aoeW = p.w + 140;
-  const aoeH = p.h + 100;
+  const aoeX = p.facing === 1 ? p.x + p.w : p.x - waterRange;
+  const aoeY = p.y - 20;
+  const aoeW = waterRange;
+  const aoeH = p.h + 40;
 
-  state.screenShake = { intensity: 10, duration: 0.25, timer: 0.25 };
+  state.screenShake = { intensity: 12, duration: 0.28, timer: 0.28 };
 
-  for (let i = 0; i < 50; i++) {
-    const angle = (Math.PI * 2 * i) / 50;
-    const speed = 140 + Math.random() * 220;
+  for (let i = 0; i < 28; i++) {
+    const offset = (i / 28) * waterRange;
     state.particles.push({
-      x: p.x + p.w / 2 + Math.cos(angle) * 18,
-      y: p.y + p.h / 2 - 20,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - 40,
-      life: 0.5, maxLife: 0.5,
-      color: ['#FF7A00', '#FF3D00', '#FFD166', '#FFF2CC'][Math.floor(Math.random() * 4)],
-      size: 4 + Math.random() * 5, gravity: true
+      x: p.x + p.w / 2 + (p.facing === 1 ? offset : -offset),
+      y: p.y + p.h / 2 - 20 + Math.sin(i * 0.7) * 10,
+      vx: p.facing * (40 + Math.random() * 40),
+      vy: Math.sin(i * 0.5) * 12 - 15,
+      life: 0.6, maxLife: 0.6,
+      color: ['rgba(0,191,255,0.65)', 'rgba(0,154,205,0.7)', 'rgba(135,206,235,0.55)'][Math.floor(Math.random() * 3)],
+      size: 6 + Math.random() * 6, gravity: false
     });
   }
 
-  for (let i = 0; i < 15; i++) {
+  for (let i = 0; i < 20; i++) {
     state.particles.push({
-      x: p.x + p.w / 2, y: p.y + p.h / 2 - 20,
-      vx: (Math.random() - 0.5) * 180, vy: -60 - Math.random() * 140,
-      life: 0.35, maxLife: 0.35, color: '#FFEA00', size: 3 + Math.random() * 3, gravity: false
+      x: p.x + p.w / 2 + (p.facing === 1 ? Math.random() * waterRange : -Math.random() * waterRange),
+      y: p.y + p.h / 2 - 10 - Math.random() * 20,
+      vx: p.facing * (20 + Math.random() * 30),
+      vy: -10 - Math.random() * 30,
+      life: 0.35, maxLife: 0.35,
+      color: 'rgba(173,216,230,0.9)',
+      size: 4 + Math.random() * 4, gravity: false
     });
   }
 
@@ -522,23 +545,23 @@ function performSpecialAttack(state: GameState, save: SaveData) {
     )) {
       const drainAmount = Math.max(1, Math.floor(enemy.maxHp * 0.5));
       enemy.hp -= drainAmount;
-      enemy.vx = (enemy.x - p.x) > 0 ? 220 : -220;
-      enemy.vy = -110;
+      enemy.vx = (enemy.x - p.x) > 0 ? 280 : -280;
+      enemy.vy = -120;
       enemy.state = 'hurt';
       enemy.stateTimer = 0.45;
       enemy.invincible = true;
-      enemy.invincibleTimer = 0.2;
+      enemy.invincibleTimer = 0.25;
 
       state.damageNumbers.push({
         x: enemy.x + enemy.w / 2, y: enemy.y,
-        value: drainAmount, life: 0.8,
-        color: '#FF4500', vy: -180
+        value: drainAmount, life: 0.9,
+        color: '#00BFFF', vy: -180
       });
 
       if (enemy.hp <= 0) {
         enemy.state = 'death';
         enemy.stateTimer = 1.2;
-        enemy.vx = (enemy.x - p.x) > 0 ? 90 : -90;
+        enemy.vx = (enemy.x - p.x) > 0 ? 100 : -100;
         enemy.vy = 80;
         state.gold += enemy.goldDrop;
         state.score += enemy.goldDrop * 10;
@@ -548,12 +571,16 @@ function performSpecialAttack(state: GameState, save: SaveData) {
     }
   }
 
-  if (fireRange > 0) {
-    for (let i = 0; i < 12; i++) {
+  if (waterRange > 0) {
+    for (let i = 0; i < 16; i++) {
       state.particles.push({
-        x: p.x + p.w / 2, y: p.y + p.h / 2 - 20,
-        vx: (Math.random() - 0.5) * 100, vy: -10 - Math.random() * 140,
-        life: 0.3, maxLife: 0.3, color: '#FF8C00', size: 3 + Math.random() * 3, gravity: false
+        x: p.x + p.w / 2 + (p.facing === 1 ? Math.random() * waterRange : -Math.random() * waterRange),
+        y: p.y + p.h / 2 + 10 + Math.random() * 10,
+        vx: p.facing * (10 + Math.random() * 20),
+        vy: 5 + Math.random() * 15,
+        life: 0.4, maxLife: 0.4,
+        color: 'rgba(224,255,255,0.55)',
+        size: 5 + Math.random() * 5, gravity: false
       });
     }
   }
@@ -687,8 +714,9 @@ function performEnemyAttack(state: GameState, enemy: Enemy) {
     let damage = enemy.damage;
 
     if (p.isBlocking) {
-      damage = Math.floor(damage * 0.2);
+      damage = 0; // Perfect block = no damage
       p.blockStamina -= 25;
+      playBlockSound();
       for (let i = 0; i < 4; i++) {
         state.particles.push({
           x: p.x + p.w / 2, y: p.y + p.h / 2,
@@ -702,6 +730,8 @@ function performEnemyAttack(state: GameState, enemy: Enemy) {
     }
 
     takeDamage(state, p, damage, false);
+    playHitSound();
+    if (damage > 0) playDamageSound();
     p.vx = enemy.facing * KNOCKBACK_FORCE * 0.8;
     p.vy = -80;
 
@@ -762,6 +792,7 @@ function checkCollisions(state: GameState) {
       { x: colX, y: colY, w: 30, h: 30 }
     )) {
       col.collected = true;
+      playCollectSound();
       if (col.type === 'coin') {
         state.gold += col.value;
         state.score += col.value;
@@ -1156,6 +1187,8 @@ function renderPlayer(ctx: CanvasRenderingContext2D, p: Player, images: Record<s
       ctx.save();
       ctx.translate(swordX, swordY);
       ctx.rotate(swingAngle);
+      ctx.globalAlpha = 0.9;
+      ctx.drawImage(img, -10, -12, 24, 24);
 
       ctx.strokeStyle = '#4a3428';
       ctx.lineWidth = 7;
@@ -1195,6 +1228,10 @@ function renderPlayer(ctx: CanvasRenderingContext2D, p: Player, images: Record<s
     ctx.translate(burstX, -12);
     ctx.scale(flamePulse, flamePulse);
 
+    ctx.globalAlpha = 0.95;
+    ctx.drawImage(images['/assets/ryu.png'] || img, -42, -54, 84, 108);
+
+    ctx.globalAlpha = 0.35;
     ctx.fillStyle = 'rgba(255, 122, 0, 0.9)';
     ctx.beginPath();
     ctx.ellipse(0, 0, 42 + attackProgress * 18, 26 + attackProgress * 10, 0, 0, Math.PI * 2);

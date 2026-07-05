@@ -1,5 +1,5 @@
 import type {
-  GameState, Player, Enemy, SaveData
+  GameState, Player, Enemy, Projectile, SaveData
 } from './types';
 import { STAGE_COUNT, createStageData, getEnemyStats, WEAPON_UPGRADES, HP_UPGRADES, SPECIAL_UPGRADES } from './stages';
 import { playAttackSound, playBlockSound, playSpecialSound, playHitSound, playDamageSound, playCollectSound } from './audio';
@@ -18,7 +18,7 @@ const INVINCIBLE_DURATION = 0.6;
 const BLOCK_STAMINA_DRAIN = 20;
 const BLOCK_STAMINA_REGEN = 15;
 const PLAYER_HP_REGEN_RATE = 8;
-const SPECIAL_METER_REGEN_RATE = 18;
+const SPECIAL_METER_REGEN_RATE = 20;
 const SPECIAL_METER_USE_THRESHOLD = 20;
 const SPECIAL_METER_PER_HIT = 8;
 const SPECIAL_METER_PER_DAMAGE = 3;
@@ -75,6 +75,7 @@ function createPlayer(save: SaveData): Player {
     invincible: false, invincibleTimer: 0,
     attackCooldown: 0, specialCooldown: 0,
     doubleJumped: false,
+    weaponMode: 'melee',
   };
 }
 
@@ -127,6 +128,7 @@ export function initGameState(stageId: number, save: SaveData): GameState {
     hazards: stage.hazards,
     collectibles,
     particles: [],
+    projectiles: [],
     damageNumbers: [],
     camera: { x: 0, y: 0 },
     stageWidth: stage.width,
@@ -157,10 +159,11 @@ export interface InputState {
   block: boolean;
   special: boolean;
   pause: boolean;
+  toggleWeapon: boolean;
 }
 
 export function createInputState(): InputState {
-  return { left: false, right: false, up: false, jumpPressed: false, attack: false, block: false, special: false, pause: false };
+  return { left: false, right: false, up: false, jumpPressed: false, attack: false, block: false, special: false, pause: false, toggleWeapon: false };
 }
 
 // ========== COLLISION ==========
@@ -268,6 +271,56 @@ export function updateGame(state: GameState, input: InputState, dt: number, save
     return p.life > 0;
   });
 
+  state.projectiles = state.projectiles.filter(proj => {
+    proj.life -= dt;
+    proj.x += proj.vx * dt;
+    if (proj.life <= 0) return false;
+
+    for (const enemy of state.enemies) {
+      if (enemy.state === 'death' || enemy.invincible) continue;
+      if (rectIntersect(proj, enemy)) {
+        const actualDamage = Math.max(1, proj.damage - enemy.defense);
+        enemy.hp -= actualDamage;
+        enemy.state = 'hurt';
+        enemy.stateTimer = 0.3;
+        enemy.invincible = true;
+        enemy.invincibleTimer = 0.3;
+        enemy.vx = proj.vx > 0 ? KNOCKBACK_FORCE : -KNOCKBACK_FORCE;
+        enemy.vy = -100;
+        playHitSound();
+
+        state.damageNumbers.push({
+          x: enemy.x + enemy.w / 2, y: enemy.y,
+          value: actualDamage, life: 0.8,
+          color: '#FFA500', vy: -150
+        });
+
+        for (let i = 0; i < 6; i++) {
+          state.particles.push({
+            x: enemy.x + enemy.w / 2, y: enemy.y + enemy.h / 2,
+            vx: (Math.random() - 0.5) * 140, vy: (Math.random() - 0.5) * 140,
+            life: 0.3, maxLife: 0.3, color: '#FFC107', size: 4 + Math.random() * 3, gravity: false
+          });
+        }
+
+        if (enemy.hp <= 0) {
+          enemy.state = 'death';
+          enemy.stateTimer = 1.2;
+          enemy.vx = proj.vx > 0 ? 60 : -60;
+          enemy.vy = 80;
+          state.gold += enemy.goldDrop;
+          state.score += enemy.goldDrop * 10;
+          healPlayerToFull(state.player, state.player.maxHp);
+          checkAllEnemiesDefeated(state);
+        }
+
+        return false;
+      }
+    }
+
+    return proj.x >= -100 && proj.x <= state.stageWidth + 100;
+  });
+
   state.damageNumbers = state.damageNumbers.filter(d => {
     d.life -= dt;
     d.y += d.vy * dt;
@@ -279,6 +332,35 @@ export function updateGame(state: GameState, input: InputState, dt: number, save
   checkWinLose(state);
 
   return state;
+}
+
+function fireArrowProjectile(state: GameState, save: SaveData) {
+  const p = state.player;
+  const arrowSpeed = 550;
+  const arrowDamage = WEAPON_UPGRADES[save.weaponLevel - 1]?.damage || 10;
+  const proj: Projectile = {
+    x: p.facing === 1 ? p.x + p.w : p.x - 24,
+    y: p.y + p.h / 2 - 6,
+    w: 24,
+    h: 12,
+    vx: p.facing === 1 ? arrowSpeed : -arrowSpeed,
+    damage: arrowDamage,
+    life: 1.2,
+    maxLife: 1.2,
+    color: '#DDA15E',
+  };
+  state.projectiles.push(proj);
+  state.particles.push({
+    x: p.x + p.w / 2 + p.facing * 16,
+    y: p.y + p.h / 2,
+    vx: p.facing * 120,
+    vy: (Math.random() - 0.5) * 60,
+    life: 0.25,
+    maxLife: 0.25,
+    color: '#FFD700',
+    size: 3,
+    gravity: false,
+  });
 }
 
 function updatePlayer(state: GameState, input: InputState, dt: number, save: SaveData) {
@@ -384,20 +466,36 @@ function updatePlayer(state: GameState, input: InputState, dt: number, save: Sav
     takeDamage(state, p, 30 * dt, true);
   }
 
+  if (input.toggleWeapon && p.state !== 'hurt' && p.state !== 'special') {
+    p.weaponMode = p.weaponMode === 'melee' ? 'arrow' : 'melee';
+    state.particles.push({
+      x: p.x + p.w / 2, y: p.y + p.h / 2,
+      vx: 0, vy: -80,
+      life: 0.5, maxLife: 0.5,
+      color: '#FFD700', size: 8, gravity: false
+    });
+  }
+
   if (input.attack && p.attackCooldown <= 0 && !p.isBlocking && p.state !== 'hurt' && p.state !== 'special') {
-    p.comboCount++;
-    if (p.comboCount > 3) p.comboCount = 1;
-    p.comboTimer = COMBO_WINDOW;
-    playAttackSound();
+    if (p.weaponMode === 'melee') {
+      p.comboCount++;
+      if (p.comboCount > 3) p.comboCount = 1;
+      p.comboTimer = COMBO_WINDOW;
+      playAttackSound();
 
-    if (p.comboCount === 1) p.state = 'attack';
-    else if (p.comboCount === 2) p.state = 'attack2';
-    else p.state = 'attack3';
+      if (p.comboCount === 1) p.state = 'attack';
+      else if (p.comboCount === 2) p.state = 'attack2';
+      else p.state = 'attack3';
 
-    p.stateTimer = ATTACK_DURATION;
-    p.attackCooldown = ATTACK_DURATION + 0.1;
-
-    performPlayerAttack(state, save);
+      p.stateTimer = ATTACK_DURATION;
+      p.attackCooldown = ATTACK_DURATION + 0.1;
+      performPlayerAttack(state, save);
+    } else {
+      p.state = 'attack';
+      p.stateTimer = ATTACK_DURATION;
+      p.attackCooldown = ATTACK_DURATION + 0.1;
+      fireArrowProjectile(state, save);
+    }
   }
 
   if (input.special && p.specialMeter >= SPECIAL_METER_USE_THRESHOLD && p.specialCooldown <= 0 && !p.isBlocking) {
@@ -903,6 +1001,10 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, imag
     }
   }
 
+  for (const proj of state.projectiles) {
+    renderProjectile(ctx, proj);
+  }
+
   if (state.player.hp > 0) {
     renderPlayer(ctx, state.player, images);
   }
@@ -1264,6 +1366,16 @@ function renderPlayer(ctx: CanvasRenderingContext2D, p: Player, images: Record<s
   ctx.fillRect(barX, barY, barW * (p.hp / p.maxHp), barH);
 }
 
+function renderProjectile(ctx: CanvasRenderingContext2D, proj: Projectile) {
+  ctx.save();
+  ctx.translate(proj.x, proj.y);
+  ctx.fillStyle = proj.color;
+  ctx.fillRect(0, 0, proj.w, proj.h);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(proj.w - 4, proj.h / 2 - 2, 4, 4);
+  ctx.restore();
+}
+
 function renderEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy, images: Record<string, HTMLImageElement>) {
   ctx.save();
   ctx.translate(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2);
@@ -1371,6 +1483,18 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: GameState, canvasWidth:
   ctx.fillStyle = '#FFF';
   ctx.font = '9px Arial';
   ctx.fillText(`BLOCK [S]`, hpX + 58, blockY + 9);
+
+  const weaponY = blockY + 18;
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(hpX - 2, weaponY - 2, 160, 14);
+  ctx.fillStyle = '#333';
+  ctx.fillRect(hpX, weaponY, 156, 10);
+  ctx.fillStyle = '#FFD700';
+  ctx.fillRect(hpX, weaponY, 156 * (p.weaponMode === 'arrow' ? 1 : 0), 10);
+  ctx.fillStyle = '#FFF';
+  ctx.font = '9px Arial';
+  ctx.fillText(`TOGGLE WEAPON [F]`, hpX + 78, weaponY + 9);
+  ctx.fillText(`SHOOT [D]`, hpX + 78, weaponY + 22);
 
   ctx.fillStyle = '#FFD700';
   ctx.font = 'bold 18px Arial';

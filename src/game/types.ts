@@ -33,6 +33,8 @@ export interface Entity {
   onGround: boolean;
 }
 
+export type WeaponMode = 'melee' | 'arrow';
+
 export interface Player extends Entity {
   state: PlayerState;
   stateTimer: number;
@@ -48,6 +50,7 @@ export interface Player extends Entity {
   attackCooldown: number;
   specialCooldown: number;
   doubleJumped: boolean;
+  weaponMode: WeaponMode;
 }
 
 export interface Enemy extends Entity {
@@ -116,6 +119,18 @@ export interface Particle {
   gravity: boolean;
 }
 
+export interface Projectile {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  vx: number;
+  damage: number;
+  life: number;
+  maxLife: number;
+  color: string;
+}
+
 export interface DamageNumber {
   x: number;
   y: number;
@@ -166,6 +181,7 @@ export interface GameState {
   hazards: Hazard[];
   collectibles: Collectible[];
   particles: Particle[];
+  projectiles: Projectile[];
   damageNumbers: DamageNumber[];
   camera: Vector2;
   stageWidth: number;

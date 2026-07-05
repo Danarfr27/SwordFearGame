@@ -95,6 +95,13 @@ export default function GameCanvas({ gameState, onStateChange, save }: GameCanva
           }
           e.preventDefault();
           break;
+        case 'f':
+        case 'F':
+          if (!e.repeat) {
+            input.toggleWeapon = true;
+          }
+          e.preventDefault();
+          break;
         case 'ArrowUp':
         case 'w':
           if (!input.up && !e.repeat) {
@@ -130,6 +137,10 @@ export default function GameCanvas({ gameState, onStateChange, save }: GameCanva
         case 'ArrowRight':
         case 'd':
           if (e.key === 'ArrowRight') input.right = false;
+          break;
+        case 'f':
+        case 'F':
+          input.toggleWeapon = false;
           break;
         case 'ArrowUp':
         case 'w':
@@ -201,6 +212,7 @@ export default function GameCanvas({ gameState, onStateChange, save }: GameCanva
     input.attack = false;
     input.special = false;
     input.jumpPressed = false;
+    input.toggleWeapon = false;
 
     // Render
     renderGame(ctx, state, imagesRef.current, 800, 600);
